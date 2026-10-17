@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-session-audit"
+version = "0.1.0"
+description = "Audit a recorded MCP session for dangling tool calls, swallowed isError, and error-channel confusion. Zero dependencies."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+authors = [{ name = "ZidoCode" }]
+keywords = ["mcp", "model-context-protocol", "audit", "session", "jsonrpc", "llm", "agent"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+mcp-session-audit = "mcp_session_audit:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+include = ["mcp_session_audit.py"]
+exclude = ["test_*", ".github"]
+
+[tool.hatch.build.targets.sdist]
+include = ["mcp_session_audit.py", "README.md", "pyproject.toml"]

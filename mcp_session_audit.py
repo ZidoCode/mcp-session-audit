@@ -89,8 +89,11 @@ def audit(lines):
         if direction == "response" or (method is None and "result" in line):
             result = line.get("result")
             if isinstance(result, dict) and isinstance(result.get("tools"), list):
-                known_tools = {t.get("name") for t in result["tools"]
-                               if isinstance(t, dict)}
+                # tools/list is paginated: each page carries its own slice, so
+                # merge instead of overwriting (a second page used to erase the
+                # first one and turn every real tool call into "unknown tool").
+                page = {t.get("name") for t in result["tools"] if isinstance(t, dict)}
+                known_tools = page if known_tools is None else (known_tools | page)
                 if rid is not None and rid not in requests:
                     requests[rid] = "tools/list"
 
@@ -228,8 +231,12 @@ def main(argv=None):
         print(__doc__)
         return 0
     path = argv[0]
-    findings = audit(load_lines(path))
-    return report(path, findings)
+    try:
+        lines = load_lines(path)
+    except OSError as exc:
+        print(f"mcp-session-audit: cannot read {path}: {exc}", file=sys.stderr)
+        return 2
+    return report(path, audit(lines))
 
 
 if __name__ == "__main__":

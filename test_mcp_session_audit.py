@@ -140,5 +140,24 @@ class TestAudit(unittest.TestCase):
                                         capture_output=True).returncode, 2)
 
 
+class TestPagination(unittest.TestCase):
+    """tools/list pages must merge; a second page must not erase the first."""
+
+    def test_paginated_list_does_not_flag_real_tools(self):
+        lines = [
+            jline({"direction": "request", "id": 2, "method": "tools/list"}),
+            jline({"direction": "response", "id": 2,
+                   "result": {"tools": [{"name": "alpha"}], "nextCursor": "c2"}}),
+            jline({"direction": "request", "id": 3, "method": "tools/list",
+                   "params": {"cursor": "c2"}}),
+            jline({"direction": "response", "id": 3, "result": {"tools": [{"name": "beta"}]}}),
+            jline({"direction": "request", "id": 4, "method": "tools/call",
+                   "params": {"name": "alpha", "arguments": {}}}),
+            jline({"direction": "response", "id": 4, "result": {"content": []}}),
+        ]
+        findings = msa.audit(lines)
+        self.assertEqual(findings, [], findings)
+
+
 if __name__ == "__main__":
     unittest.main()
